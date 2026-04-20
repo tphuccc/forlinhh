@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Letter For You</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      font-family: 'Lora', Georgia, serif;
+      overflow: hidden;
+    }
+
+    /* ── Stars ── */
+    .particles { position: fixed; inset: 0; pointer-events: none; }
+    .particle {
+      position: absolute;
+      width: 2px; height: 2px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      animation: twinkle 3s infinite;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; }
+      50%       { opacity: 0.9; }
+    }
+
+    /* ── Floating pets ── */
+    .pets { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+    .pet {
+      position: absolute;
+      font-size: 32px;
+      line-height: 1;
+      animation: floatPet linear infinite;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+    }
+    @keyframes floatPet {
+      0%   { transform: translateY(0px) rotate(-4deg) scale(1); }
+      25%  { transform: translateY(-18px) rotate(3deg) scale(1.05); }
+      50%  { transform: translateY(-8px) rotate(-2deg) scale(1); }
+      75%  { transform: translateY(-22px) rotate(4deg) scale(1.04); }
+      100% { transform: translateY(0px) rotate(-4deg) scale(1); }
+    }
+
+    /* ── Name bubbles ── */
+    .bubble {
+      position: absolute;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.3);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border-radius: 999px;
+      padding: 7px 16px;
+      font-family: sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      white-space: nowrap;
+      pointer-events: none;
+      animation: floatBubble ease-in-out infinite;
+    }
+    .bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 8px solid rgba(255,255,255,0.25);
+    }
+    @keyframes floatBubble {
+      0%   { transform: translateY(0px) rotate(-2deg); }
+      30%  { transform: translateY(-14px) rotate(2deg); }
+      60%  { transform: translateY(-6px) rotate(-1deg); }
+      100% { transform: translateY(0px) rotate(-2deg); }
+    }
+
+    /* ── Envelope wrapper ── */
+    .envelope-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      z-index: 10;
+    }
+
+    .hint-text {
+      font-family: sans-serif;
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.1em;
+      transition: opacity 0.4s;
+    }
+
+    /* ── Envelope ── */
+    .envelope {
+      width: 160px;
+      height: 112px;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s;
+      filter: drop-shadow(0 8px 24px rgba(0,0,0,0.6));
+    }
+    .envelope:hover  { transform: scale(1.08); }
+    .envelope:active { transform: scale(0.97); }
+
+    .env-body {
+      width: 160px; height: 112px;
+      background: #f5e6c8;
+      border-radius: 4px;
+      position: absolute;
+      bottom: 0;
+      overflow: hidden;
+    }
+    .env-left {
+      width: 0; height: 0;
+      border-bottom: 56px solid #ead9b5;
+      border-left:   80px solid transparent;
+      position: absolute; bottom: 0; left: 0;
+    }
+    .env-right {
+      width: 0; height: 0;
+      border-bottom: 56px solid #e0cc9d;
+      border-right:  80px solid transparent;
+      position: absolute; bottom: 0; right: 0;
+    }
+    .env-bottom {
+      width: 0; height: 0;
+      border-left:  80px solid transparent;
+      border-right: 80px solid transparent;
+      border-bottom: 68px solid #ead9b5;
+      position: absolute; bottom: 0; left: 0;
+    }
+    .env-flap {
+      width: 0; height: 0;
+      border-left:  80px solid transparent;
+      border-right: 80px solid transparent;
+      border-top:   68px solid #e8d5a8;
+      position: absolute; top: 0; left: 0;
+      z-index: 2;
+      transform-origin: top center;
+      transition: transform 0.55s cubic-bezier(0.4,0,0.2,1);
+    }
+    .env-flap.open { transform: rotateX(180deg); }
+
+    .seal {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #c0392b;
+      position: absolute;
+      top: 42px; left: 66px;
+      z-index: 3;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .seal.broken { opacity: 0; transform: scale(0.4); }
+
+    /* ── Letter overlay ── */
+    .letter-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.72);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    .letter-overlay.visible { opacity: 1; pointer-events: all; }
+
+    .letter-paper {
+      background: #fffdf5;
+      border-radius: 3px;
+      padding: 48px 52px;
+      max-width: 440px; width: 90%;
+      position: relative;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+      border-top: 3px solid #c0392b;
+      animation: rise 0.5s cubic-bezier(0.4,0,0.2,1) both;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(40px) scale(0.95); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ruled lines behind text only, not image */
+    .letter-paper::before {
+      content: none;
+    }
+
+    .letter-text {
+      position: relative;
+    }
+    .letter-text::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -52px; right: -52px; bottom: -48px;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 27px,
+        #ece4d0 27px,
+        #ece4d0 28px
+      );
+      pointer-events: none;
+    }
+
+    .letter-paper h2 {
+      font-size: 21px; font-weight: 500;
+      color: #2c1810; margin-bottom: 18px;
+      position: relative;
+    }
+    .letter-paper p {
+      font-size: 15px; line-height: 1.85;
+      color: #4a3728; margin-bottom: 14px;
+      position: relative;
+    }
+    .letter-paper .sign {
+      margin-top: 22px; font-style: italic;
+      color: #8b6350; position: relative;
+    }
+
+    .close-btn {
+      position: absolute; top: 14px; right: 16px;
+      background: none; border: none;
+      font-size: 18px; color: #bbb;
+      cursor: pointer; padding: 4px 8px;
+      border-radius: 4px; line-height: 1;
+      font-family: sans-serif;
+    }
+    .close-btn:hover { background: #f0ebe0; color: #555; }
+  </style>
+</head>
+<body>
+
+  <div class="particles" id="particles"></div>
+  <div class="pets" id="pets"></div>
+
+  <!-- Floating name bubbles -->
+  <div class="bubble" style="left:8%; top:18%; animation-duration:5s; animation-delay:0s;">Nam Joo-hyuk 🤍</div>
+  <div class="bubble" style="left:72%; top:12%; animation-duration:6s; animation-delay:1s;">Nam Joo-hyuk 🤍</div>
+  <div class="bubble" style="left:15%; top:72%; animation-duration:4.5s; animation-delay:2s;">Jung Kook ✨</div>
+  <div class="bubble" style="left:68%; top:78%; animation-duration:5.5s; animation-delay:0.5s;">Jung Kook ✨</div>
+  <div class="bubble" style="left:80%; top:45%; animation-duration:7s; animation-delay:1.5s;">Nam Joo-hyuk 🤍</div>
+  <div class="bubble" style="left:5%; top:50%; animation-duration:6.5s; animation-delay:3s;">Jung Kook ✨</div>
+
+  <div class="envelope-wrap">
+    <p class="hint-text" id="hint">click to open</p>
+    <div class="envelope" id="envelope" onclick="openLetter()">
+      <div class="env-body">
+        <div class="env-left"></div>
+        <div class="env-right"></div>
+        <div class="env-bottom"></div>
+      </div>
+      <div class="env-flap" id="flap"></div>
+      <div class="seal" id="seal">✦</div>
+    </div>
+  </div>
+
+  <div class="letter-overlay" id="letterOverlay">
+    <div class="letter-paper">
+      <button class="close-btn" onclick="closeLetter()">✕</button>
+
+      <!-- ✏️ Replace "yourphoto.jpg" with your image filename -->
+      <img src="linhsmile.png" alt="photo"
+        onerror="this.style.display='none'; document.getElementById('img-placeholder').style.display='flex';"
+        style="width:100%; max-height:220px; object-fit:cover; border-radius:8px; margin-bottom:18px; display:block;" />
+
+      <!-- This placeholder shows only if the image is missing -->
+      <div id="img-placeholder" style="display:none; width:100%; height:120px; border-radius:8px; border:2px dashed #d4c4a8; align-items:center; justify-content:center; margin-bottom:18px; color:#b0a090; font-family:sans-serif; font-size:13px;">
+        🖼️ place your image here
+      </div>
+
+      <!-- ✏️ Edit your letter content below -->
+      <div class="letter-text">
+      <h2>Dear Linhhh,</h2>
+      <p>Anh đọc note và có thấy em đang rấc mệttt, anh thì không khéo trong cách nhắn em nên không biết nhắn rì cạ @@.</p>
+      <p>Nên anh code 1 cái web này để gửi một tý lời động viên cho em ha.</p>
+      <p>Linh cười rất xinhhh, như ảnh bên nèe, anh nhớ những lúc em vẫn đang mood tốt và không bị kiểm tra bón hành kkkk, mình gửi update ảnh nhau thường xuyên cthu cute nè, sau đợt thi này anh mong em có thể thấy nhẹ nhàng hơnnn, đạt kết quả thuận lợi nè, thương em lắmm, không dài dòng nữa nên đâu nên chúc em ôn tốt nhé baii.</p>
+      <p class="sign">Chúc buổi tối vui vẻ,<br><strong>Một người ngu ngốc nhưng mún quan tâm @@ </strong></p>
+      </div>
+      <!-- ✏️ End of letter content -->
+
+    </div>
+  </div>
+
+  <script>
+    /* Generate twinkling stars */
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 60; i++) {
+      const d = document.createElement('div');
+      d.className = 'particle';
+      d.style.left   = Math.random() * 100 + '%';
+      d.style.top    = Math.random() * 100 + '%';
+      d.style.animationDelay    = (Math.random() * 3) + 's';
+      d.style.animationDuration = (2 + Math.random() * 3) + 's';
+      container.appendChild(d);
+    }
+
+    /* Generate floating pets */
+    const petEmojis = ['🐱','🐶','🐾','🐱','🐕','🐈','🐩','😺','🐶','🐱'];
+    const petsContainer = document.getElementById('pets');
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'pet';
+      p.textContent = petEmojis[i % petEmojis.length];
+      p.style.left   = (5 + Math.random() * 90) + '%';
+      p.style.top    = (5 + Math.random() * 88) + '%';
+      p.style.fontSize = (22 + Math.random() * 22) + 'px';
+      p.style.animationDuration  = (4 + Math.random() * 5) + 's';
+      p.style.animationDelay     = (Math.random() * 5) + 's';
+      p.style.opacity = 0.75 + Math.random() * 0.25;
+      petsContainer.appendChild(p);
+    }
+
+    function openLetter() {
+      document.getElementById('flap').classList.add('open');
+      document.getElementById('seal').classList.add('broken');
+      document.getElementById('hint').style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('letterOverlay').classList.add('visible');
+      }, 420);
+    }
+
+    function closeLetter() {
+      document.getElementById('letterOverlay').classList.remove('visible');
+      setTimeout(() => {
+        document.getElementById('flap').classList.remove('open');
+        document.getElementById('seal').classList.remove('broken');
+        document.getElementById('hint').style.opacity = '1';
+      }, 300);
+    }
+
+    /* Close overlay when clicking outside the paper */
+    document.getElementById('letterOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeLetter();
+    });
+  </script>
+
+</body>
+</html>
